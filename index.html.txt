@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マイ スケジュール帳</title>
+  <!-- カレンダーを表示するためのライブラリ (FullCalendar) -->
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    #calendar { max-width: 800px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+  <h2>📅 マイ スケジュール帳</h2>
+  <div id='calendar'></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('calendar');
+
+      // 1. スマホ本体（LocalStorage）から保存済みの予定を読み込む
+      var savedEvents = JSON.parse(localStorage.getItem('myEvents')) || [];
+
+      // 2. カレンダーの設定と表示
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ja', // 日本語化
+        events: savedEvents, // 保存済みの予定を読み込む
+
+        // 日付をクリックした時の処理（予定の追加）
+        dateClick: function(info) {
+          var title = prompt('予定のタイトルを入力してください:');
+          if (title) {
+            var newEvent = { title: title, start: info.dateStr };
+            
+            // カレンダーに新しい予定を追加
+            calendar.addEvent(newEvent);
+
+            // ローカルストレージにデータを保存
+            savedEvents.push(newEvent);
+            localStorage.setItem('myEvents', JSON.stringify(savedEvents));
+          }
+        },
+
+        // 登録済みの予定をクリックした時の処理（予定の削除）
+        eventClick: function(info) {
+          if (confirm('この予定を削除しますか？')) {
+            info.event.remove();
+            
+            // ローカルストレージからも削除して更新
+            savedEvents = savedEvents.filter(e => !(e.title === info.event.title && e.start === info.event.startStr));
+            localStorage.setItem('myEvents', JSON.stringify(savedEvents));
+          }
+        }
+      });
+
+      calendar.render();
+    });
+  </script>
+</body>
+</html>
